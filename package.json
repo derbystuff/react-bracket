@@ -1,0 +1,24 @@
+{
+  "name": "react-bracket",
+  "version": "0.0.1",
+  "description": "Simple bracket charts for React",
+  "main": "lib/Bracket.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "React",
+    "Bracket",
+    "Chart"
+  ],
+  "author": "Jeremy Darling <jeremy.darling@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^3.8.11",
+    "react": "^0.13.3",
+    "react-component-gulp-tasks": "^0.7.0"
+  },
+  "browserify-shim": {
+    "react": "global:React"
+  }
+}
