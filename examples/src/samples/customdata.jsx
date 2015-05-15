@@ -105,7 +105,7 @@ module.exports = React.createClass({
     if(!car){
       return <ParticipantPicker participants={participants} />;
     }
-    if(options.overallWinner){
+    if(options.isFinal){
       return {
         display: car.driver+' ('+car.number+')'
       };
