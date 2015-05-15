@@ -1,7 +1,7 @@
 var React = require('react'),
 	Bracket = require('react-bracket');
 
-var data = [
+var layout = [
   [
     [0, 1],
     null,
@@ -39,11 +39,16 @@ var participants = (function(){
     return participants;
   })();
 
+var getParticipant = function(options){
+	var participant = participants[(options.info||[])[options.index]];
+	return participant?<span>{participant}</span>:<span>&nbsp;</span>;
+};
+
 module.exports = React.createClass({
   render: function(){
     return (
 			<div>
-				<Bracket data={data} participants={participants} />
+				<Bracket layout={layout} participants={participants} getParticipant={getParticipant}/>
 	    </div>
 		);
   }

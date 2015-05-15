@@ -17,10 +17,12 @@ var taskConfig = {
 		standalone: true,
 		files: [
 			'index.html',
+			'designer.html',
 			'.gitignore'
 		],
 		scripts: [
-			'app.js'
+			'app.js',
+			'designer.js',
 		],
 		less: [
 			'example.less'

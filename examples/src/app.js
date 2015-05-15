@@ -9,9 +9,9 @@ React.render(
   <div>
 		<h2>Basic</h2>
 		<Basic />
-		<h2>Late Entry</h2>
+		<h2>Late Entry (or Byes)</h2>
 		<LateEntry />
-		<h2>Custom Data</h2>
+		<h2>Custom Edits</h2>
 		<CustomData />
   </div>,
 	document.getElementById('example')

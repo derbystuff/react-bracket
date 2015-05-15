@@ -20,5 +20,8 @@
   },
   "browserify-shim": {
     "react": "global:React"
+  },
+  "dependencies": {
+    "classnames": "^2.1.1"
   }
 }

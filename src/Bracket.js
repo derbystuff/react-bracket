@@ -1,100 +1,128 @@
 var React = require('react');
+var classNames = require('classnames');
 
-var isNumeric = function(n) {
-  return !isNaN(parseFloat(n)) && isFinite(n);
-};
-
-var getHeat = function(index, level, competitors, participants, competitorInfo){
-  var top = competitorInfo({
-    competitors: competitors,
-    id: competitors[0],
-    participants: participants
+var classList = function(component, defaults){
+  var result = defaults;
+  var keys = (component.props.className||'').split(/[ \t]+/g);
+  keys.forEach(function(key){
+    result[key]=true;
   });
-  var bottom = competitorInfo({
-    competitors: competitors,
-    id: competitors[1],
-    participants: participants
-  });
-  return [
-    <li className={"game game-top "+(top.className||'')} key={level+'-'+index+'-1'}>{top.display}</li>,
-    <li className="game game-spacer" key={level+'-'+index+'-2'}>&nbsp;</li>,
-    <li className={"game game-bottom "+(top.className||'')} key={level+'-'+index+'-3'}>{bottom.display}</li>,
-    <li className="spacer" key={level+'-'+index+'-4'}>&nbsp;</li>
-  ];
+  return classNames(result);
 };
 
-var emptyHeat = function(index, level){
-  return [
-    <li className="game game-top-filler" key={level+'-'+index+'-1'}>&nbsp;</li>,
-    <li className="game game-blank" key={level+'-'+index+'-2'}>&nbsp;</li>,
-    <li className="game game-bottom-filler" key={level+'-'+index+'-3'}>&nbsp;</li>,
-    <li className="spacer" key={level+'-'+index+'-4'}>&nbsp;</li>
-  ];
+var defaults = function(){
+	var res = {};
+	Array.prototype.slice.call(arguments).forEach(function(item){
+		res = Object.keys(item).reduce(function(p, key){
+			p[key] = item[key];
+			return p;
+		}, res);
+	});
+	return res;
 };
-
-var HeatGroup = React.createClass({
-  render: function(){
-    var level = this.props.level;
-    var participants = this.props.participants;
-    var heats = this.props.competitors.map(function(item, index){
-      return Array.isArray(item)?
-        getHeat(index, level, item, participants, this.props.competitorInfo):
-        emptyHeat(index, level);
-    }.bind(this));
-    return (
-      <ul className={'round round-'+level}>
-        <li className="spacer">&nbsp;</li>
-        {heats}
-      </ul>
-    );
-  }
-});
-
-var Final = React.createClass({
-  render: function(){
-    var winner = this.props.competitorInfo({
-      id: this.props.winner,
-      participants: this.props.participants,
-      overallWinner: true
-    });
-    return (
-      <ul className='round round-final'>
-        <li className="spacer">&nbsp;</li>
-        <li className="game game-top winner">{winner.display||''}</li>
-        <li className="spacer">&nbsp;</li>
-      </ul>
-    );
-  }
-});
 
 var Bracket = React.createClass({
-  render: function(){
-    var data = this.props.data;
-    var participants = this.props.participants;
-    var competitorInfo = this.props.competitorInfo || function(options){
-      var id = options.id, participants = options.participants;
-      if(isNumeric(id)){
-        var competitor = participants[id]+' ('+id+')';
-        return {
-          display: competitor
-        };
-      }
-      return {
-        display: <span>&nbsp;</span>
-      };
-    };
-    var wIndex = data.length-1;
-    var heatsListing = data.map(function(competitors, level){
-      return level!==wIndex?
-        <HeatGroup competitors={competitors} level={level} participants={participants} key={level} competitorInfo={competitorInfo} />:
-        <Final key={level} winner={(competitors[0]||[])[0]} participants={participants} competitorInfo={competitorInfo} />
-    });
+	getParticipant: function(info){
+		if(this.props.getParticipant){
+			var control = this.props.getParticipant(defaults(info, {participants: this.props.participants, data: this.props.data}));
+      return <span className="participant" key={info.key}>{control}</span>;
+		}
+		return <span className="participant">getParticipant property not defined</span>;
+	},
+	getRound: function(options){
+		var {
+					key,
+					heats,
+          level,
+					isFinal
+				} = options;
+		if(isFinal){
+			return (
+				<div className="round" key={key}>
+					{this.getFinal({key, level, winner: heats[0]})}
+				</div>
+			);
+		}
+		var heats = heats.map(function(info, key){
+			if(info===null){
+				return [
+					this.getHeatPlaceholder({
+						key,
+            level
+					}),
+					<div className="spacer" key={key+"-spacer"}></div>
+				];
+			}
+			return [
+				this.getHeat({
+					info,
+          level,
+					key
+				}),
+				<div className="spacer" key={key+"-spacer"}></div>
+			];
+		}.bind(this));
+		return (
+			<div className="round" key={key}>
+				<div className="spacer"></div>
+				{heats}
+			</div>
+		);
+	},
+	getHeatPlaceholder: function(options){
+		var {key} = options;
+		return (
+			<div className="heat" key={key}>
+				<div className="placeholder-top">&nbsp;</div>
+				<div className="placeholder-filler"></div>
+				<div className="placeholder-bottom">&nbsp;</div>
+			</div>
+		);
+	},
+	getHeat: function(options){
+		var {
+			    info,
+					key,
+          level
+				} = options;
+		return (
+			<div className="heat" key={key}>
+				<div className="participant-top">{this.getParticipant({level, info, index: 0, placement: 'top'})}</div>
+				<div className="filler"></div>
+				<div className="participant-bottom">{this.getParticipant({level, info, index: 1, placement: 'bottom'})}</div>
+			</div>
+		);
+	},
+	getFinal: function(options){
+		var {
+          winner,
+          key
+        } = options;
     return (
-      <div className="bracket">
-        {heatsListing}
-      </div>
-    );
-  }
+			<div className="heat">
+				<div className="participant-filler"></div>
+				<div className="participant-center">{this.getParticipant({level: key, info: winner, index: 0, placement: 'winner', isFinal: true})}</div>
+				<div className="participant-filler"></div>
+			</div>
+		);
+	},
+	render: function(){
+		var layout = this.props.layout || [];
+		var lastHeat = layout.length-1;
+		var rounds = layout.map(function(heats, key){
+			return this.getRound({heats, key, level: key, isFinal: key===lastHeat});
+		}.bind(this));
+    var classNames = classList(this, {
+      'bracket': true
+    });
+		return (
+			<div className={classNames}>
+				<div className="rounds">
+					{rounds}
+				</div>
+			</div>
+		)
+	}
 });
 
 module.exports = Bracket;

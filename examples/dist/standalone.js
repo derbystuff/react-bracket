@@ -3,151 +3,207 @@
 'use strict';
 
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
+var classNames = require('classnames');
 
-var isNumeric = function isNumeric(n) {
-  return !isNaN(parseFloat(n)) && isFinite(n);
+var classList = function classList(component, defaults) {
+	var result = defaults;
+	var keys = (component.props.className || '').split(/[ \t]+/g);
+	keys.forEach(function (key) {
+		result[key] = true;
+	});
+	return classNames(result);
 };
 
-var getHeat = function getHeat(index, level, competitors, participants, competitorInfo) {
-  var top = competitorInfo({
-    competitors: competitors,
-    id: competitors[0],
-    participants: participants
-  });
-  var bottom = competitorInfo({
-    competitors: competitors,
-    id: competitors[1],
-    participants: participants
-  });
-  return [React.createElement(
-    'li',
-    { className: 'game game-top ' + (top.className || ''), key: level + '-' + index + '-1' },
-    top.display
-  ), React.createElement(
-    'li',
-    { className: 'game game-spacer', key: level + '-' + index + '-2' },
-    ' '
-  ), React.createElement(
-    'li',
-    { className: 'game game-bottom ' + (top.className || ''), key: level + '-' + index + '-3' },
-    bottom.display
-  ), React.createElement(
-    'li',
-    { className: 'spacer', key: level + '-' + index + '-4' },
-    ' '
-  )];
+var defaults = function defaults() {
+	var res = {};
+	Array.prototype.slice.call(arguments).forEach(function (item) {
+		res = Object.keys(item).reduce(function (p, key) {
+			p[key] = item[key];
+			return p;
+		}, res);
+	});
+	return res;
 };
-
-var emptyHeat = function emptyHeat(index, level) {
-  return [React.createElement(
-    'li',
-    { className: 'game game-top-filler', key: level + '-' + index + '-1' },
-    ' '
-  ), React.createElement(
-    'li',
-    { className: 'game game-blank', key: level + '-' + index + '-2' },
-    ' '
-  ), React.createElement(
-    'li',
-    { className: 'game game-bottom-filler', key: level + '-' + index + '-3' },
-    ' '
-  ), React.createElement(
-    'li',
-    { className: 'spacer', key: level + '-' + index + '-4' },
-    ' '
-  )];
-};
-
-var HeatGroup = React.createClass({
-  displayName: 'HeatGroup',
-
-  render: function render() {
-    var level = this.props.level;
-    var participants = this.props.participants;
-    var heats = this.props.competitors.map((function (item, index) {
-      return Array.isArray(item) ? getHeat(index, level, item, participants, this.props.competitorInfo) : emptyHeat(index, level);
-    }).bind(this));
-    return React.createElement(
-      'ul',
-      { className: 'round round-' + level },
-      React.createElement(
-        'li',
-        { className: 'spacer' },
-        ' '
-      ),
-      heats
-    );
-  }
-});
-
-var Final = React.createClass({
-  displayName: 'Final',
-
-  render: function render() {
-    var winner = this.props.competitorInfo({
-      id: this.props.winner,
-      participants: this.props.participants,
-      overallWinner: true
-    });
-    return React.createElement(
-      'ul',
-      { className: 'round round-final' },
-      React.createElement(
-        'li',
-        { className: 'spacer' },
-        ' '
-      ),
-      React.createElement(
-        'li',
-        { className: 'game game-top winner' },
-        winner.display || ''
-      ),
-      React.createElement(
-        'li',
-        { className: 'spacer' },
-        ' '
-      )
-    );
-  }
-});
 
 var Bracket = React.createClass({
-  displayName: 'Bracket',
+	displayName: 'Bracket',
 
-  render: function render() {
-    var data = this.props.data;
-    var participants = this.props.participants;
-    var competitorInfo = this.props.competitorInfo || function (options) {
-      var id = options.id,
-          participants = options.participants;
-      if (isNumeric(id)) {
-        var competitor = participants[id] + ' (' + id + ')';
-        return {
-          display: competitor
-        };
-      }
-      return {
-        display: React.createElement(
-          'span',
-          null,
-          ' '
-        )
-      };
-    };
-    var wIndex = data.length - 1;
-    var heatsListing = data.map(function (competitors, level) {
-      return level !== wIndex ? React.createElement(HeatGroup, { competitors: competitors, level: level, participants: participants, key: level, competitorInfo: competitorInfo }) : React.createElement(Final, { key: level, winner: (competitors[0] || [])[0], participants: participants, competitorInfo: competitorInfo });
-    });
-    return React.createElement(
-      'div',
-      { className: 'bracket' },
-      heatsListing
-    );
-  }
+	getParticipant: function getParticipant(info) {
+		if (this.props.getParticipant) {
+			var control = this.props.getParticipant(defaults(info, { participants: this.props.participants, data: this.props.data }));
+			return React.createElement(
+				'span',
+				{ className: 'participant', key: info.key },
+				control
+			);
+		}
+		return React.createElement(
+			'span',
+			{ className: 'participant' },
+			'getParticipant property not defined'
+		);
+	},
+	getRound: function getRound(options) {
+		var key = options.key;
+		var heats = options.heats;
+		var level = options.level;
+		var isFinal = options.isFinal;
+
+		if (isFinal) {
+			return React.createElement(
+				'div',
+				{ className: 'round', key: key },
+				this.getFinal({ key: key, level: level, winner: heats[0] })
+			);
+		}
+		var heats = heats.map((function (info, key) {
+			if (info === null) {
+				return [this.getHeatPlaceholder({
+					key: key,
+					level: level
+				}), React.createElement('div', { className: 'spacer', key: key + '-spacer' })];
+			}
+			return [this.getHeat({
+				info: info,
+				level: level,
+				key: key
+			}), React.createElement('div', { className: 'spacer', key: key + '-spacer' })];
+		}).bind(this));
+		return React.createElement(
+			'div',
+			{ className: 'round', key: key },
+			React.createElement('div', { className: 'spacer' }),
+			heats
+		);
+	},
+	getHeatPlaceholder: function getHeatPlaceholder(options) {
+		var key = options.key;
+
+		return React.createElement(
+			'div',
+			{ className: 'heat', key: key },
+			React.createElement(
+				'div',
+				{ className: 'placeholder-top' },
+				' '
+			),
+			React.createElement('div', { className: 'placeholder-filler' }),
+			React.createElement(
+				'div',
+				{ className: 'placeholder-bottom' },
+				' '
+			)
+		);
+	},
+	getHeat: function getHeat(options) {
+		var info = options.info;
+		var key = options.key;
+		var level = options.level;
+
+		return React.createElement(
+			'div',
+			{ className: 'heat', key: key },
+			React.createElement(
+				'div',
+				{ className: 'participant-top' },
+				this.getParticipant({ level: level, info: info, index: 0, placement: 'top' })
+			),
+			React.createElement('div', { className: 'filler' }),
+			React.createElement(
+				'div',
+				{ className: 'participant-bottom' },
+				this.getParticipant({ level: level, info: info, index: 1, placement: 'bottom' })
+			)
+		);
+	},
+	getFinal: function getFinal(options) {
+		var winner = options.winner;
+		var key = options.key;
+
+		return React.createElement(
+			'div',
+			{ className: 'heat' },
+			React.createElement('div', { className: 'participant-filler' }),
+			React.createElement(
+				'div',
+				{ className: 'participant-center' },
+				this.getParticipant({ level: key, info: winner, index: 0, placement: 'winner', isFinal: true })
+			),
+			React.createElement('div', { className: 'participant-filler' })
+		);
+	},
+	render: function render() {
+		var layout = this.props.layout || [];
+		var lastHeat = layout.length - 1;
+		var rounds = layout.map((function (heats, key) {
+			return this.getRound({ heats: heats, key: key, level: key, isFinal: key === lastHeat });
+		}).bind(this));
+		var classNames = classList(this, {
+			'bracket': true
+		});
+		return React.createElement(
+			'div',
+			{ className: classNames },
+			React.createElement(
+				'div',
+				{ className: 'rounds' },
+				rounds
+			)
+		);
+	}
 });
 
 module.exports = Bracket;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"classnames":2}],2:[function(require,module,exports){
+/*!
+  Copyright (c) 2015 Jed Watson.
+  Licensed under the MIT License (MIT), see
+  http://jedwatson.github.io/classnames
+*/
+
+function classNames () {
+	'use strict';
+
+	var classes = '';
+
+	for (var i = 0; i < arguments.length; i++) {
+		var arg = arguments[i];
+		if (!arg) continue;
+
+		var argType = typeof arg;
+
+		if ('string' === argType || 'number' === argType) {
+			classes += ' ' + arg;
+
+		} else if (Array.isArray(arg)) {
+			classes += ' ' + classNames.apply(null, arg);
+
+		} else if ('object' === argType) {
+			for (var key in arg) {
+				if (arg.hasOwnProperty(key) && arg[key]) {
+					classes += ' ' + key;
+				}
+			}
+		}
+	}
+
+	return classes.substr(1);
+}
+
+// safely export classNames for node / browserify
+if (typeof module !== 'undefined' && module.exports) {
+	module.exports = classNames;
+}
+
+/* global define */
+// safely export classNames for RequireJS
+if (typeof define !== 'undefined' && define.amd) {
+	define('classnames', [], function() {
+		return classNames;
+	});
+}
+
 },{}]},{},[1])(1)
 });

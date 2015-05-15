@@ -16,45 +16,57 @@ Usage
 ===
 
 ```
-var Bracket = require('react-bracket');
+var React = require('react'),
+	Bracket = require('react-bracket');
 
-var data = [
+var layout = [
   [
-    [0, 1],
-    null,
-    [2, 3],
-    null,
-    null,
-    null,
-    null,
-    null,
+    1,
+    2,
   ],
   [
-    [null, 5],
-    [3, 6],
-    null,
-    null,
+    3
   ],
   [
-    [null, 6],
-    null,
+    4
   ],
-  [
-    [],
-  ],
-  [
-    []
-  ]
 ];
 
-var racers = (function(){
-    var racers = [];
-    var i;
-    for(i = 0; i<10; i++){
-      racers.push('Racer '+i);
-    }
-    return racers;
-  })();
+var data = {
+	1: {
+		top: 0,
+		bottom: 1
+	},
+	2: {
+		top: 2,
+		bottom: 3
+	},
+	3: {
+		top: 1,
+		bottom: 2
+	},
+	4: {
+		winner: 1
+	}
+};
 
-<Bracket data={data} participants={racers} title="Test Bracket" />
+var participants = (function(){
+  var participants = [];
+  var i;
+  for(i = 0; i<4; i++){
+		participants.push('Participant '+i);
+  }
+  return participants;
+})();
+
+var getParticipant = function(options){
+	var index = options.data[options.info][options.placement];
+	var participant = participants[index];
+	return participant?<span>{participant}</span>:<span>&nbsp;</span>;
+};
+
+React.render(
+  <Bracket layout={layout} data={data} participants={participants} getParticipant={getParticipant} />,
+	document.body
+);
 ```

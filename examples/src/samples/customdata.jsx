@@ -1,17 +1,37 @@
 var React = require('react'),
 	Bracket = require('react-bracket');
 
-var data = [
+var layout = [
   [
-    [{car: 101, phase1: 0.25}, {car: 102, phase2: 0.25}],
-    [{car: 103}, {car: 104, phase1: 0.002, phase2: 0.12}],
+    0,
+    1,
   ],
   [
-    [{car: 102, phase1: 0.25}, {car: 104, phase2: 0.35}]
+    2
   ],
   [
-    [{car: 104}]
+    3
   ]
+];
+
+var data = [
+	{
+		top: {
+			car: 101,
+			phase1: 0.125
+		},
+		bottom: {
+			car: 102,
+			phase2: 0.225
+		}
+	},
+	null,
+	{
+		top: {
+			car: 102
+		}
+	},
+	null
 ];
 
 var racers = (function(){
@@ -52,32 +72,53 @@ var isNumeric = function(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 };
 
+var defaults = function(){
+	var res = {};
+	Array.prototype.slice.call(arguments).forEach(function(item){
+		res = Object.keys(item).reduce(function(p, key){
+			p[key] = item[key];
+			return p;
+		}, res);
+	});
+	return res;
+};
+
 module.exports = React.createClass({
   getRacerInfo: function(options){
-    var carNumber = (options.id||{}).car, participants = options.participants;
+		var phase = options.data[options.info];
+		var participants = options.participants;
+		if(!phase){
+      if(options.level===0){
+				return <ParticipantPicker participants={participants} />;
+			}
+			return <span>&nbsp;</span>;
+    }
+		var driverInfo = phase[options.placement];
+		if(!driverInfo){
+			return <span>&nbsp;</span>;
+		}
+		var carNumber = driverInfo.car;
     var cars = participants.filter(function(entry){
       return entry.number === carNumber;
     });
     var car = cars.shift();
     if(!car){
-      return {
-        display: <ParticipantPicker participants={participants} />
-      };
+      return <ParticipantPicker participants={participants} />;
     }
     if(options.overallWinner){
       return {
         display: car.driver+' ('+car.number+')'
       };
     }
-    car.phase1 = options.id.phase1 || '';
-    car.phase2 = options.id.phase2 || '';
-    return {
-      display: <Participant info={car} />
-    };
+    var details = defaults(car, {
+			phase1: driverInfo.phase1||'',
+			phase2: driverInfo.phase2||''
+		});
+    return <Participant info={details} />;
   },
   render: function(){
     return (
-      <Bracket data={data} participants={racers} competitorInfo={this.getRacerInfo} />
+      <Bracket className="bigger" layout={layout} data={data} participants={racers} getParticipant={this.getRacerInfo} />
     )
   }
 });
