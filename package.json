@@ -1,6 +1,6 @@
 {
   "name": "react-bracket",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Simple bracket charts for React",
   "main": "lib/Bracket.js",
   "scripts": {
