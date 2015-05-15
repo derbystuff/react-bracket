@@ -1,46 +1,44 @@
-.bracket {
+.bracket .rounds {
   display: flex;
   flex-direction: row;
 }
-.bracket .round {
+.bracket .rounds .round {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  width: 200px;
-  list-style: none;
-  padding: 0;
 }
-.bracket .round .spacer {
+.bracket .rounds .round .spacer {
   flex-grow: 1;
 }
-.bracket .round .spacer:first-child,
-.bracket .round .spacer:last-child {
-  flex-grow: .5;
+.bracket .rounds .round .spacer:first-child,
+.bracket .rounds .round .spacer:last-child {
+  flex-grow: 0.5;
 }
-.bracket .round .game-spacer {
+.bracket .rounds .round .heat {
+  display: flex;
   flex-grow: 1;
+  flex-direction: column;
 }
-.bracket .round .game-blank {
-  flex-grow: 1;
+.bracket .rounds .round .heat .placeholder-filler,
+.bracket .rounds .round .heat .filler {
   min-height: 40px;
+  flex-grow: 1;
 }
-.bracket .round li.game {
-  padding-left: 20px;
+.bracket .rounds .round .heat .filler {
+  border-right: 1px solid #aaa;
 }
-.bracket .round li.game .right {
-  float: right;
-  margin-right: 5px;
+.bracket .rounds .round .heat .participant-filler {
+  display: flex;
+  flex-grow: 1;
 }
-.bracket .round li.game.winner {
-  font-weight: bold;
+.bracket .rounds .round .heat .participant-filler:first-child,
+.bracket .rounds .round .heat .participant-filler:last-child {
+  flex-grow: 0.5;
 }
-.bracket .round li.game-top {
+.bracket .rounds .round .heat .participant-top,
+.bracket .rounds .round .heat .participant-center {
   border-bottom: 1px solid #aaa;
 }
-.bracket .round li.game-spacer {
-  border-right: 1px solid #aaa;
-  min-height: 40px;
-}
-.bracket .round li.game-bottom {
+.bracket .rounds .round .heat .participant-bottom {
   border-top: 1px solid #aaa;
 }
