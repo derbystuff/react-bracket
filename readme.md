@@ -70,3 +70,5 @@ React.render(
 	document.body
 );
 ```
+
+![Image of Output](https://raw.githubusercontent.com/derbystuff/react-bracket/master/images/basic.png)
